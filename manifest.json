@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "id": "esaad.yaqazah",
+  "name": "Yaqazah",
+  "version": "1.0.0",
+  "author": "Ebrahim Saad",
+  "license": "MIT",
+  "description": "An Islamic companion for Omarchy that breaks the digital trance of long computer sessions with prayer countdowns, a daily timetable, athkar, and mindful spiritual reminders.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Yaqazah",
+    "description": "Next prayer countdown, daily timetable, and mindful Islamic reminders directly on your desktop.",
+    "category": "Time",
+    "allowMultiple": false,
+    "defaultSection": "center",
+    "defaults": {
+      "locationMode": "Auto",
+      "manualCity": "",
+      "manualCountry": "",
+      "calculationMethod": "Auto",
+      "asrSchool": "Shafi",
+      "notificationsEnabled": true
+    },
+    "schema": [
+      {
+        "key": "locationMode",
+        "type": "enum",
+        "label": "Location",
+        "options": ["Auto", "Manual"],
+        "defaultValue": "Auto",
+        "description": "Auto detects your city from your public IP. Manual uses the city and country below."
+      },
+      {
+        "key": "manualCity",
+        "type": "string",
+        "label": "Manual city",
+        "defaultValue": "",
+        "description": "Used when Location is set to Manual."
+      },
+      {
+        "key": "manualCountry",
+        "type": "string",
+        "label": "Manual country",
+        "defaultValue": "",
+        "description": "Country name or two-letter code for the manual city."
+      },
+      {
+        "key": "calculationMethod",
+        "type": "enum",
+        "label": "Calculation method",
+        "options": ["Auto", "MWL", "ISNA", "Egypt", "Makkah", "Karachi", "Tehran", "Gulf", "Kuwait", "Qatar", "Singapore", "France", "Turkey", "Russia", "Moonsighting", "Dubai", "JAKIM", "Tunisia", "Algeria", "Kemenag", "Morocco", "Portugal", "Jafari"],
+        "defaultValue": "Auto",
+        "description": "Auto selects a commonly used method for the detected country."
+      },
+      {
+        "key": "asrSchool",
+        "type": "enum",
+        "label": "Asr school",
+        "options": ["Shafi", "Hanafi"],
+        "defaultValue": "Shafi"
+      },
+      {
+        "key": "notificationsEnabled",
+        "type": "boolean",
+        "label": "Prayer notifications",
+        "defaultValue": true,
+        "description": "Show a desktop notification when each prayer begins."
+      }
+    ]
+  }
+}
