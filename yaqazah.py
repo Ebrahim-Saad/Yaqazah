@@ -594,11 +594,16 @@ def build_schedule(timings: dict[str, Any], now: datetime) -> tuple[list[dict[st
         )
 
     next_name = next(name for key, name, _ in PRAYERS if key == next_key)
+    delta_seconds = max(0, int((next_moment - now).total_seconds()))
+    minutes_left = delta_seconds // 60
     return rows, {
         "key": next_key,
         "name": next_name,
         "time": next_moment.strftime("%H:%M"),
         "countdown": duration_text(next_moment - now),
+        "minutesLeft": minutes_left,
+        "secondsLeft": delta_seconds,
+        "targetTimestamp": int(next_moment.timestamp()),
         "dayLabel": day_label,
     }
 

@@ -24,9 +24,18 @@
       "manualCountry": "",
       "calculationMethod": "Auto",
       "asrSchool": "Shafi",
-      "notificationsEnabled": true
+      "notificationsEnabled": true,
+      "barFormat": "Countdown"
     },
     "schema": [
+      {
+        "key": "barFormat",
+        "type": "enum",
+        "label": "Bar widget look",
+        "options": ["Countdown", "Time", "Smart"],
+        "defaultValue": "Countdown",
+        "description": "Choose between countdown (in 1h 30m), scheduled time (15:30), or smart (time until less than 1 hour left, then countdown)."
+      },
       {
         "key": "locationMode",
         "type": "enum",

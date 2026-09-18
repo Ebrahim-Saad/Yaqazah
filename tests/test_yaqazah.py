@@ -132,8 +132,32 @@ class YaqazahTests(unittest.TestCase):
         rows, next_prayer = yaqazah.build_schedule(timings, now)
         self.assertEqual(next_prayer["name"], "Asr")
         self.assertEqual(next_prayer["countdown"], "in 2h 40m")
+        self.assertEqual(next_prayer["minutesLeft"], 160)
+        self.assertEqual(next_prayer["secondsLeft"], 160 * 60)
+        self.assertGreater(next_prayer["targetTimestamp"], 0)
         self.assertEqual(next(row for row in rows if row["key"] == "asr")["status"], "next")
         self.assertEqual(next(row for row in rows if row["key"] == "dhuhr")["status"], "past")
+
+    def test_schedule_under_one_hour(self):
+        timings = {
+            "date": date(2026, 8, 23).isoformat(),
+            "timings": {
+                "fajr": "04:20",
+                "sunrise": "06:02",
+                "dhuhr": "13:10",
+                "asr": "17:04",
+                "maghrib": "20:16",
+                "isha": "21:26",
+            },
+        }
+        # 16:34 is exactly 30 minutes before Asr (17:04)
+        now = datetime(2026, 8, 23, 16, 34, tzinfo=ZoneInfo("Europe/London"))
+        rows, next_prayer = yaqazah.build_schedule(timings, now)
+        self.assertEqual(next_prayer["name"], "Asr")
+        self.assertEqual(next_prayer["countdown"], "in 30m")
+        self.assertEqual(next_prayer["minutesLeft"], 30)
+        self.assertEqual(next_prayer["secondsLeft"], 30 * 60)
+        self.assertLess(next_prayer["minutesLeft"], 60)
 
     def test_after_isha_rolls_to_tomorrow(self):
         timings = {

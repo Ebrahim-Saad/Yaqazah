@@ -43,11 +43,72 @@ Panel {
   property bool geocoding: false
   property string methodFilter: ""
 
+  property string currentPage: "main"   // "main" | "settings"
+
   readonly property var nextPrayer: report && report.next ? report.next : null
   readonly property var prayers: report && report.prayers ? report.prayers : []
+
+  readonly property string currentBarFormatSetting: {
+    var raw = root.settings && root.settings.barFormat !== undefined ? String(root.settings.barFormat).trim().toLowerCase() : "countdown"
+    if (raw === "time" || raw === "clock") return "Time"
+    if (raw === "smart" || raw === "hybrid" || raw === "auto") return "Smart"
+    return "Countdown"
+  }
+
+  readonly property bool isUnderOneHour: {
+    if (!nextPrayer) return false
+    if (nextPrayer.targetTimestamp !== undefined && nextPrayer.targetTimestamp > 0) {
+      var diff = Number(nextPrayer.targetTimestamp) - Math.floor(Date.now() / 1000)
+      return diff < 3600
+    }
+    if (nextPrayer.secondsLeft !== undefined && nextPrayer.secondsLeft !== null) {
+      return Number(nextPrayer.secondsLeft) < 3600
+    }
+    if (nextPrayer.minutesLeft !== undefined && nextPrayer.minutesLeft !== null) {
+      return Number(nextPrayer.minutesLeft) < 60
+    }
+    if (nextPrayer.countdown && typeof nextPrayer.countdown === "string") {
+      return nextPrayer.countdown.indexOf("h") === -1
+    }
+    return false
+  }
+
+  readonly property string barTimeText: {
+    if (!nextPrayer) return ""
+    if (currentBarFormatSetting === "Time") {
+      return nextPrayer.time
+    } else if (currentBarFormatSetting === "Smart") {
+      return isUnderOneHour ? nextPrayer.countdown : nextPrayer.time
+    } else {
+      return nextPrayer.countdown
+    }
+  }
+
   readonly property string barLabel: nextPrayer
-    ? nextPrayer.name + " · " + nextPrayer.countdown
+    ? nextPrayer.name + " · " + barTimeText
     : (loading ? "Prayer …" : "Prayer unavailable")
+
+  readonly property var barFormatOptions: [
+    {
+      id: "Countdown",
+      title: "Countdown",
+      example: "(in 1h 30m)",
+      description: "Always shows the remaining time countdown until the next prayer."
+    },
+    {
+      id: "Time",
+      title: "Prayer Time",
+      example: "(15:30)",
+      description: "Always shows the scheduled clock time of the next prayer."
+    },
+    {
+      id: "Smart",
+      title: "Smart Auto-switch",
+      example: "(15:30 → in 45m)",
+      description: "Shows scheduled time until less than 1 hour remains, then switches to countdown."
+    }
+  ]
+
   readonly property string themedIconSource: report && report.iconPath
     ? "file://" + report.iconPath + "?v=" + iconRevision
     : Qt.resolvedUrl("assets/yaqazah.svg")
@@ -157,6 +218,22 @@ Panel {
     persistSettings({ asrSchool: schoolId })
   }
 
+  function openSettings() {
+    root.cancelEditingLocation()
+    root.openPicker = ""
+    root.currentPage = "settings"
+    if (flickable) flickable.contentY = 0
+  }
+
+  function closeSettings() {
+    root.currentPage = "main"
+    if (flickable) flickable.contentY = 0
+  }
+
+  function setBarFormat(formatId) {
+    persistSettings({ barFormat: formatId })
+  }
+
   function startEditingLocation() {
     root.openPicker = ""
     root.editingLocation = true
@@ -235,6 +312,7 @@ Panel {
   }
 
   function close() {
+    root.currentPage = "main"
     root.editingLocation = false
     root.openPicker = ""
     root.controller.hide()
@@ -250,6 +328,7 @@ Panel {
 
   onOpenedChanged: {
     if (!opened) {
+      currentPage = "main"
       editingLocation = false
       openPicker = ""
     }
@@ -335,10 +414,9 @@ Panel {
     owner: root.barIdentity
     bar: root.bar
     open: root.opened
-    centerOnBar: true
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(440))
-    contentHeight: panel.fittedContentHeight(contentColumn.implicitHeight, Style.space(620))
+    contentHeight: panel.fittedContentHeight(activeHolder.implicitHeight, Style.space(620))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -346,7 +424,8 @@ Panel {
       blocked: root.editingLocation || root.openPicker !== ""
       onActivateRequested: root.refresh()
       onCloseRequested: {
-        if (root.editingLocation) root.cancelEditingLocation()
+        if (root.currentPage === "settings") root.closeSettings()
+        else if (root.editingLocation) root.cancelEditingLocation()
         else if (root.openPicker !== "") root.openPicker = ""
         else root.close()
       }
@@ -354,30 +433,52 @@ Panel {
       onTextKey: function(t) { if (t === "r" || t === "R") root.refresh() }
 
       Flickable {
+        id: flickable
         anchors.fill: parent
         contentWidth: width
-        contentHeight: contentColumn.implicitHeight
+        contentHeight: activeHolder.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         interactive: contentHeight > height
 
-        Column {
-          id: contentColumn
-          width: parent.width
-          spacing: Style.space(12)
+        Item {
+          id: activeHolder
+          width: flickable.width
+          implicitHeight: root.currentPage === "settings" ? settingsColumn.implicitHeight : contentColumn.implicitHeight
 
-          // ---- Hero header ------------------------------------------------
-          Item {
+          Column {
+            id: contentColumn
+            visible: root.currentPage === "main"
             width: parent.width
-            implicitHeight: Math.max(heroLabels.implicitHeight, nextTime.implicitHeight)
+            spacing: Style.space(12)
 
-            Column {
-              id: heroLabels
-              anchors.left: parent.left
-              anchors.right: nextTime.left
-              anchors.rightMargin: Style.space(14)
-              anchors.verticalCenter: parent.verticalCenter
-              spacing: Style.space(2)
+            // ---- Hero header ------------------------------------------------
+            Item {
+              width: parent.width
+              implicitHeight: Math.max(settingsBtn.implicitHeight, heroLabels.implicitHeight, nextTime.implicitHeight)
+
+              PanelActionButton {
+                id: settingsBtn
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                iconText: "󰒓"
+                tooltipText: "Settings"
+                foreground: root.foreground
+                hoverColor: root.accent
+                fontFamily: root.fontFamily
+                fontSize: Style.font.body
+                size: Style.space(26)
+                onClicked: root.openSettings()
+              }
+
+              Column {
+                id: heroLabels
+                anchors.left: settingsBtn.right
+                anchors.leftMargin: Style.space(10)
+                anchors.right: nextTime.left
+                anchors.rightMargin: Style.space(14)
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Style.space(2)
 
               Text {
                 width: parent.width
@@ -1155,7 +1256,227 @@ Panel {
             }
           }
         }
+
+        // ---- Settings View -----------------------------------------------
+        Column {
+          id: settingsColumn
+          visible: root.currentPage === "settings"
+          width: parent.width
+          spacing: Style.space(12)
+
+          // ---- Settings Header -------------------------------------------
+          Item {
+            width: parent.width
+            implicitHeight: Math.max(backBtn.implicitHeight, settingsTitle.implicitHeight)
+
+            PanelActionButton {
+              id: backBtn
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              iconText: "󰅁"
+              tooltipText: "Back to prayers"
+              foreground: root.foreground
+              hoverColor: root.accent
+              fontFamily: root.fontFamily
+              fontSize: Style.font.body
+              size: Style.space(26)
+              onClicked: root.closeSettings()
+            }
+
+            Text {
+              id: settingsTitle
+              anchors.left: backBtn.right
+              anchors.leftMargin: Style.space(10)
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Settings"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.heading
+              font.bold: true
+            }
+
+            Text {
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Yaqazah"
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+              font.letterSpacing: 0.8
+            }
+          }
+
+          PanelSeparator { foreground: root.foreground }
+
+          // ---- Bar Widget Look Section -----------------------------------
+          Column {
+            width: parent.width
+            spacing: Style.space(4)
+
+            PanelSectionHeader {
+              text: "BAR WIDGET LOOK"
+              foreground: root.foreground
+            }
+
+            Text {
+              width: parent.width
+              text: "Control how the next prayer is displayed in your top bar widget."
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              wrapMode: Text.WordWrap
+            }
+          }
+
+          Column {
+            width: parent.width
+            spacing: Style.space(6)
+
+            Repeater {
+              model: root.barFormatOptions
+
+              Rectangle {
+                id: optCard
+                required property var modelData
+                required property int index
+                width: parent.width
+                implicitHeight: Math.max(Style.space(52), optCardCol.implicitHeight + Style.space(16))
+                radius: Style.cornerRadius
+
+                readonly property bool isSelected: root.currentBarFormatSetting === modelData.id
+                readonly property bool isHovered: optCardMouse.containsMouse
+
+                color: isSelected
+                  ? Style.selectedFillFor(root.foreground, root.accent)
+                  : (isHovered ? Style.hoverFillFor(root.foreground, root.accent) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.04))
+                border.width: Style.spacing.hairline
+                border.color: isSelected
+                  ? root.accent
+                  : (isHovered ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.5) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.12))
+
+                Row {
+                  anchors.fill: parent
+                  anchors.margins: Style.space(8)
+                  spacing: Style.space(10)
+
+                  // Radio indicator circle
+                  Rectangle {
+                    width: Style.space(18)
+                    height: Style.space(18)
+                    radius: width / 2
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: optCard.isSelected ? root.accent : "transparent"
+                    border.width: Style.spacing.hairline
+                    border.color: optCard.isSelected ? root.accent : (optCard.isHovered ? root.foreground : root.dim)
+
+                    Text {
+                      anchors.centerIn: parent
+                      visible: optCard.isSelected
+                      text: "󰄬"
+                      color: Color.popups.background
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  Column {
+                    id: optCardCol
+                    width: parent.width - Style.space(28)
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Style.space(2)
+
+                    Row {
+                      width: parent.width
+                      spacing: Style.space(6)
+
+                      Text {
+                        text: optCard.modelData.title
+                        color: optCard.isSelected ? root.accent : root.foreground
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.body
+                        font.bold: true
+                      }
+
+                      Text {
+                        text: optCard.modelData.example
+                        color: optCard.isSelected ? root.accent : root.dim
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.bodySmall
+                        font.bold: optCard.isSelected
+                      }
+                    }
+
+                    Text {
+                      width: parent.width
+                      text: optCard.modelData.description
+                      color: root.dim
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      wrapMode: Text.WordWrap
+                    }
+                  }
+                }
+
+                MouseArea {
+                  id: optCardMouse
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  preventStealing: true
+                  onClicked: root.setBarFormat(optCard.modelData.id)
+                }
+              }
+            }
+          }
+
+          PanelSeparator { foreground: root.foreground }
+
+          // ---- Notifications Row ------------------------------------------
+          Item {
+            width: parent.width
+            implicitHeight: Math.max(notifLabels.implicitHeight, notifToggle.implicitHeight)
+
+            Column {
+              id: notifLabels
+              anchors.left: parent.left
+              anchors.right: notifToggle.left
+              anchors.rightMargin: Style.space(12)
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: Style.space(2)
+
+              Text {
+                text: "Prayer notifications"
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.body
+                font.bold: true
+              }
+
+              Text {
+                width: parent.width
+                text: "Desktop alert when each prayer begins."
+                color: root.dim
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                wrapMode: Text.WordWrap
+              }
+            }
+
+            ToggleSwitch {
+              id: notifToggle
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              checked: root.settings && root.settings.notificationsEnabled !== false
+              foreground: root.foreground
+              accent: root.accent
+              onToggled: root.persistSettings({ notificationsEnabled: !checked })
+            }
+          }
+        }
       }
     }
   }
+}
 }

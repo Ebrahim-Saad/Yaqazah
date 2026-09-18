@@ -43,8 +43,12 @@ Third-party plugins run inside `omarchy-shell`; review the source before enablin
 
 ## Configure
 
-Open **Setup > Plugins > Yaqazah** to change:
+Open **Setup > Plugins > Yaqazah** or open the in-popup **Settings** page:
 
+- **Bar widget look**:
+  - `Countdown`: Always show remaining time countdown, e.g. `(in 1h 30m)`.
+  - `Time`: Always show exact scheduled prayer clock time, e.g. `(15:30)`.
+  - `Smart`: Show scheduled prayer time (`15:30`) until less than 1 hour remains, then automatically switch to countdown (`in 45m`).
 - **Location**: `Auto` or `Manual`
 - **Manual city / country**: used only in Manual mode
 - **Calculation method**: `Auto` or one of the supported Aladhan methods
@@ -71,12 +75,15 @@ This resolves the same XDG state and cache directories used by Yaqazah. Removing
 - Left click: open or close the daily prayer panel
 - Middle click: refresh location and prayer data
 - In the popup:
+  - Click the **Settings icon** (`󰒓`) in the top left corner to switch to the Settings page.
+  - On the Settings page, customize the Bar Widget format (`Countdown`, `Time`, `Smart`) or toggle prayer notifications.
+  - Click the **Back button** (`󰅁`) in the top left corner to return to the prayer timetable.
   - Click the **Location** rail to toggle `Auto (IP)` or search for a city with live suggestions.
   - Click **Method** to open the calculation method picker and select from 23 supported methods.
   - Click **Shafi** or **Hanafi** to toggle the Asr juristic school in 1 click.
-  - Changes are saved immediately to Omarchy's settings and update the timetable in real time.
+  - Changes are saved immediately to Omarchy's settings and update the timetable and status bar in real time.
 - `R` while the panel is open: refresh
-- `Esc`: close active picker or close the panel
+- `Esc`: return from Settings, close active picker, or close the panel
 
 The plugin refreshes every 30 seconds. Location is refreshed every six hours; prayer schedules are cached per date, location, method, and Asr school.
 

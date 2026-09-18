@@ -62,6 +62,13 @@ BarWidget {
       root.open()
       if (panelLoader.item) panelLoader.item.openPicker = "method"
     }
+    function openSettings(): void {
+      root.open()
+      if (panelLoader.item) panelLoader.item.openSettings()
+    }
+    function setBarFormat(format: string): void {
+      if (panelLoader.item) panelLoader.item.setBarFormat(format)
+    }
     function setMethod(methodId: string): void {
       if (panelLoader.item) panelLoader.item.setMethod(methodId)
     }
