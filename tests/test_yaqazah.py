@@ -213,6 +213,35 @@ class YaqazahTests(unittest.TestCase):
             self.assertEqual(results[0]["country"], "Egypt")
             self.assertEqual(results[0]["label"], "Cairo, Cairo Governorate, Egypt")
 
+    def test_format_clock(self):
+        self.assertEqual(yaqazah.format_clock("04:20", "24h"), "04:20")
+        self.assertEqual(yaqazah.format_clock("04:20", "12h"), "4:20 AM")
+        self.assertEqual(yaqazah.format_clock("12:00", "12h"), "12:00 PM")
+        self.assertEqual(yaqazah.format_clock("12:30", "12h"), "12:30 PM")
+        self.assertEqual(yaqazah.format_clock("15:45", "12h"), "3:45 PM")
+        self.assertEqual(yaqazah.format_clock("00:15", "12h"), "12:15 AM")
+
+    def test_schedule_includes_12h_format(self):
+        timings = {
+            "date": "2026-08-23",
+            "timings": {
+                "fajr": "04:20",
+                "sunrise": "06:02",
+                "dhuhr": "13:10",
+                "asr": "17:04",
+                "maghrib": "20:16",
+                "isha": "21:26",
+            },
+        }
+        now = datetime(2026, 8, 23, 14, 24, tzinfo=ZoneInfo("Europe/London"))
+        rows, next_prayer = yaqazah.build_schedule(timings, now)
+        self.assertEqual(next_prayer["time"], "17:04")
+        self.assertEqual(next_prayer["time12"], "5:04 PM")
+        asr_row = next(r for r in rows if r["key"] == "asr")
+        self.assertEqual(asr_row["time"], "17:04")
+        self.assertEqual(asr_row["time12"], "5:04 PM")
+
 
 if __name__ == "__main__":
     unittest.main()
+

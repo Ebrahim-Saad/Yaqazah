@@ -51,6 +51,9 @@ Open **Setup > Plugins > Yaqazah** or open the in-popup **Settings** page:
   - `Smart`: Show scheduled prayer time (`15:30`) until less than 1 hour remains, then automatically switch to countdown (`45m`).
 - **Bar widget separator**:
   - Choose between presets (`· Dot`, `- Dash`, `| Pipe`, `: Colon`, `( ) Parens`, `Space`) or specify any custom separator string.
+- **Time system**:
+  - `24-hour`: Standard 24-hour clock display, e.g. `15:30`.
+  - `12-hour`: 12-hour clock format with AM/PM, e.g. `3:30 PM`.
 - **Location**: `Auto` or `Manual`
 - **Manual city / country**: used only in Manual mode
 - **Calculation method**: `Auto` or one of the supported Aladhan methods

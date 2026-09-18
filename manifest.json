@@ -26,7 +26,8 @@
       "asrSchool": "Shafi",
       "notificationsEnabled": true,
       "barFormat": "Countdown",
-      "barSeparator": "dot"
+      "barSeparator": "dot",
+      "timeFormat": "24-hour"
     },
     "schema": [
       {
@@ -43,6 +44,14 @@
         "label": "Bar widget separator",
         "defaultValue": "dot",
         "description": "Separator between prayer name and timer in the bar (dot, dash, pipe, colon, parens, space, or custom)."
+      },
+      {
+        "key": "timeFormat",
+        "type": "enum",
+        "label": "Time system",
+        "options": ["24-hour", "12-hour"],
+        "defaultValue": "24-hour",
+        "description": "Clock format for prayer times: 24-hour (15:30) or 12-hour (3:30 PM)."
       },
       {
         "key": "locationMode",

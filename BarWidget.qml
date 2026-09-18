@@ -72,6 +72,9 @@ BarWidget {
     function setBarSeparator(separator: string): void {
       if (panelLoader.item) panelLoader.item.setBarSeparator(separator)
     }
+    function setTimeFormat(format: string): void {
+      if (panelLoader.item) panelLoader.item.setTimeFormat(format)
+    }
     function setMethod(methodId: string): void {
       if (panelLoader.item) panelLoader.item.setMethod(methodId)
     }

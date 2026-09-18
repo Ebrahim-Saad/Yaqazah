@@ -556,6 +556,20 @@ def duration_text(delta: timedelta, past: bool = False, in_prefix: bool = False)
     return f"in {amount}" if in_prefix else amount
 
 
+def format_clock(clock_str: str, time_format: str = "24h") -> str:
+    if time_format != "12h":
+        return clock_str
+    try:
+        parts = clock_str.split(":")
+        hour = int(parts[0])
+        minute = int(parts[1])
+        ampm = "PM" if hour >= 12 else "AM"
+        h12 = hour % 12 or 12
+        return f"{h12}:{minute:02d} {ampm}"
+    except (ValueError, IndexError):
+        return clock_str
+
+
 def build_schedule(timings: dict[str, Any], now: datetime) -> tuple[list[dict[str, str]], dict[str, str]]:
     schedule_day = date.fromisoformat(str(timings["date"]))
     timezone = now.tzinfo or ZoneInfo("UTC")
@@ -585,11 +599,13 @@ def build_schedule(timings: dict[str, Any], now: datetime) -> tuple[list[dict[st
     for key, name, _ in PRAYERS:
         moment = prayer_moments[key]
         is_next = key == next_key and day_label == "Today"
+        clock_val = str(timings["timings"][key])
         rows.append(
             {
                 "key": key,
                 "name": name,
-                "time": str(timings["timings"][key]),
+                "time": clock_val,
+                "time12": format_clock(clock_val, "12h"),
                 "relative": duration_text(moment - now, past=moment <= now),
                 "status": "next" if is_next else ("past" if moment <= now else "later"),
             }
@@ -598,10 +614,12 @@ def build_schedule(timings: dict[str, Any], now: datetime) -> tuple[list[dict[st
     next_name = next(name for key, name, _ in PRAYERS if key == next_key)
     delta_seconds = max(0, int((next_moment - now).total_seconds()))
     minutes_left = delta_seconds // 60
+    next_clock_24 = next_moment.strftime("%H:%M")
     return rows, {
         "key": next_key,
         "name": next_name,
-        "time": next_moment.strftime("%H:%M"),
+        "time": next_clock_24,
+        "time12": format_clock(next_clock_24, "12h"),
         "countdown": duration_text(next_moment - now),
         "minutesLeft": minutes_left,
         "secondsLeft": delta_seconds,
@@ -639,7 +657,11 @@ def render_themed_icon() -> Path:
 
 
 def send_notification_if_due(
-    schedule: list[dict[str, str]], location: dict[str, Any], now: datetime, icon_path: Path
+    schedule: list[dict[str, str]],
+    location: dict[str, Any],
+    now: datetime,
+    icon_path: Path,
+    time_format: str = "24h",
 ) -> None:
     state = read_json(NOTIFICATION_STATE) or {"sent": {}}
     sent = state.get("sent", {})
@@ -654,12 +676,13 @@ def send_notification_if_due(
         prayer_time = datetime_for(now.date(), prayer["time"], now.tzinfo or ZoneInfo("UTC"))
         if timedelta(0) <= now - prayer_time < timedelta(minutes=2):
             city = str(location.get("city") or "your location")
+            display_time = format_clock(prayer["time"], time_format)
             command = [
                 "notify-send",
                 "--app-name=Yaqazah",
                 f"--icon={icon_path}",
                 f"Prayer time · {prayer['name']}",
-                f"{prayer['name']} begins now at {prayer['time']} in {city}.",
+                f"{prayer['name']} begins now at {display_time} in {city}.",
             ]
             try:
                 subprocess.run(command, check=False, timeout=5)
@@ -691,8 +714,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     schedule, next_prayer = build_schedule(timings, now)
     icon_path = render_themed_icon()
+    time_fmt = getattr(args, "time_format", "24h")
     if args.notify and not timings.get("stale", False):
-        send_notification_if_due(schedule, location, now, icon_path)
+        send_notification_if_due(schedule, location, now, icon_path, time_fmt)
 
     country = str(location.get("country") or "").strip()
     city = str(location.get("city") or "Unknown city").strip()
@@ -723,6 +747,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--country", default="")
     parser.add_argument("--method", choices=("Auto", *METHODS.keys()), default="Auto")
     parser.add_argument("--school", choices=("Shafi", "Hanafi"), default="Shafi")
+    parser.add_argument("--time-format", choices=("24h", "12h"), default="24h")
     parser.add_argument("--notify", action="store_true")
     parser.add_argument("--search-city", default=None, help="Search for city suggestions")
     return parser.parse_args(argv)

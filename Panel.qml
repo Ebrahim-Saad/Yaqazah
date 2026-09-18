@@ -121,12 +121,44 @@ Panel {
     return false
   }
 
+  readonly property string currentTimeFormatSetting: {
+    var raw = root.settings && root.settings.timeFormat !== undefined ? String(root.settings.timeFormat).trim().toLowerCase() : "24-hour"
+    if (raw.indexOf("12") !== -1) return "12-hour"
+    return "24-hour"
+  }
+  readonly property bool is12Hour: currentTimeFormatSetting === "12-hour"
+
+  function formatClockTime(clockStr) {
+    if (!clockStr) return ""
+    var str = String(clockStr).trim()
+    if (!root.is12Hour) {
+      if (str.indexOf("AM") === -1 && str.indexOf("PM") === -1) return str
+      var p = str.split(" ")
+      var timePart = p[0].split(":")
+      var hr = parseInt(timePart[0], 10)
+      var mn = timePart[1] || "00"
+      if (p[1] === "PM" && hr < 12) hr += 12
+      if (p[1] === "AM" && hr === 12) hr = 0
+      return (hr < 10 ? "0" + hr : "" + hr) + ":" + mn
+    }
+    if (str.indexOf("AM") !== -1 || str.indexOf("PM") !== -1) return str
+    var parts = str.split(":")
+    if (parts.length < 2) return str
+    var h = parseInt(parts[0], 10)
+    var m = parts[1]
+    if (isNaN(h)) return str
+    var ampm = h >= 12 ? "PM" : "AM"
+    var h12 = h % 12
+    if (h12 === 0) h12 = 12
+    return h12 + ":" + m + " " + ampm
+  }
+
   readonly property string barTimeText: {
     if (!nextPrayer) return ""
     if (currentBarFormatSetting === "Time") {
-      return nextPrayer.time
+      return formatClockTime(nextPrayer.time)
     } else if (currentBarFormatSetting === "Smart") {
-      return isUnderOneHour ? rawCountdown : nextPrayer.time
+      return isUnderOneHour ? rawCountdown : formatClockTime(nextPrayer.time)
     } else {
       return rawCountdown
     }
@@ -155,13 +187,13 @@ Panel {
     {
       id: "Time",
       title: "Prayer Time",
-      example: "(15:30)",
+      example: root.is12Hour ? "(3:30 PM)" : "(15:30)",
       description: "Always shows the scheduled clock time of the next prayer."
     },
     {
       id: "Smart",
       title: "Smart Auto-switch",
-      example: "(15:30 → 45m)",
+      example: root.is12Hour ? "(3:30 PM → 45m)" : "(15:30 → 45m)",
       description: "Shows scheduled time until less than 1 hour remains, then switches to countdown."
     }
   ]
@@ -230,6 +262,7 @@ Panel {
     args.push("--country", String(s.manualCountry || ""))
     args.push("--method", String(s.calculationMethod || "Auto"))
     args.push("--school", String(s.asrSchool || "Shafi"))
+    args.push("--time-format", root.is12Hour ? "12h" : "24h")
     if (s.notificationsEnabled !== false) args.push("--notify")
     return args
   }
@@ -293,6 +326,10 @@ Panel {
 
   function setBarSeparator(sepId) {
     persistSettings({ barSeparator: String(sepId || "").trim() || "dot" })
+  }
+
+  function setTimeFormat(formatId) {
+    persistSettings({ timeFormat: formatId })
   }
 
   function startEditingLocation() {
@@ -565,10 +602,9 @@ Panel {
 
             Text {
               id: nextTime
-              width: Style.space(68)
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-              text: root.nextPrayer ? root.nextPrayer.time : "—"
+              text: root.nextPrayer ? root.formatClockTime(root.nextPrayer.time) : "—"
               textFormat: Text.PlainText
               color: root.accent
               font.family: root.fontFamily
@@ -924,7 +960,7 @@ Panel {
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
                   anchors.verticalCenter: parent.verticalCenter
-                  text: parent.modelData.time
+                  text: root.formatClockTime(parent.modelData.time)
                   textFormat: Text.PlainText
                   color: parent.modelData.status === "next" ? root.accent : root.foreground
                   font.family: root.fontFamily
@@ -1624,6 +1660,91 @@ Panel {
                   preventStealing: true
                   onClicked: {
                     if (customSepInput.text.trim() !== "") root.setBarSeparator(customSepInput.text)
+                  }
+                }
+              }
+            }
+          }
+
+          PanelSeparator { foreground: root.foreground }
+
+          // ---- Time System Section ----------------------------------------
+          Column {
+            width: parent.width
+            spacing: Style.space(6)
+
+            PanelSectionHeader {
+              text: "TIME SYSTEM"
+              foreground: root.foreground
+            }
+
+            Text {
+              width: parent.width
+              text: "Choose between 24-hour and 12-hour clock display."
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              wrapMode: Text.WordWrap
+            }
+
+            Row {
+              width: parent.width
+              spacing: Style.space(8)
+
+              Repeater {
+                model: [
+                  { id: "24-hour", title: "24-hour", example: "15:30" },
+                  { id: "12-hour", title: "12-hour", example: "3:30 PM" }
+                ]
+
+                Rectangle {
+                  id: timeSysBtn
+                  required property var modelData
+                  required property int index
+                  width: Math.floor((parent.width - Style.space(8)) / 2)
+                  height: Style.space(44)
+                  radius: Style.cornerRadius
+
+                  readonly property bool isSelected: root.currentTimeFormatSetting === modelData.id
+                  readonly property bool isHovered: timeSysMouse.containsMouse
+
+                  color: isSelected
+                    ? Style.selectedFillFor(root.foreground, root.accent)
+                    : (isHovered ? Style.hoverFillFor(root.foreground, root.accent) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.04))
+                  border.width: Style.spacing.hairline
+                  border.color: isSelected
+                    ? root.accent
+                    : (isHovered ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.5) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.12))
+
+                  Column {
+                    anchors.centerIn: parent
+                    spacing: Style.space(2)
+
+                    Text {
+                      anchors.horizontalCenter: parent.horizontalCenter
+                      text: timeSysBtn.modelData.title
+                      color: timeSysBtn.isSelected ? root.accent : root.foreground
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.bodySmall
+                      font.bold: true
+                    }
+
+                    Text {
+                      anchors.horizontalCenter: parent.horizontalCenter
+                      text: timeSysBtn.modelData.example
+                      color: timeSysBtn.isSelected ? root.accent : root.dim
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  MouseArea {
+                    id: timeSysMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    preventStealing: true
+                    onClicked: root.setTimeFormat(timeSysBtn.modelData.id)
                   }
                 }
               }
