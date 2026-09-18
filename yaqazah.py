@@ -544,14 +544,16 @@ def datetime_for(day: date, clock: str, timezone: ZoneInfo) -> datetime:
     return datetime.combine(day, time(hour, minute), timezone)
 
 
-def duration_text(delta: timedelta, past: bool = False) -> str:
+def duration_text(delta: timedelta, past: bool = False, in_prefix: bool = False) -> str:
     total_minutes = max(0, int(abs(delta.total_seconds()) // 60))
     hours, minutes = divmod(total_minutes, 60)
     if hours:
         amount = f"{hours}h" + (f" {minutes}m" if minutes else "")
     else:
         amount = f"{max(1, minutes)}m"
-    return f"{amount} ago" if past else f"in {amount}"
+    if past:
+        return f"{amount} ago"
+    return f"in {amount}" if in_prefix else amount
 
 
 def build_schedule(timings: dict[str, Any], now: datetime) -> tuple[list[dict[str, str]], dict[str, str]]:

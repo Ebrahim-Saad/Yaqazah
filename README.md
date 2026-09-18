@@ -46,9 +46,11 @@ Third-party plugins run inside `omarchy-shell`; review the source before enablin
 Open **Setup > Plugins > Yaqazah** or open the in-popup **Settings** page:
 
 - **Bar widget look**:
-  - `Countdown`: Always show remaining time countdown, e.g. `(in 1h 30m)`.
-  - `Time`: Always show exact scheduled prayer clock time, e.g. `(15:30)`.
-  - `Smart`: Show scheduled prayer time (`15:30`) until less than 1 hour remains, then automatically switch to countdown (`in 45m`).
+  - `Countdown`: Always show remaining time countdown, e.g. `1h 30m`.
+  - `Time`: Always show exact scheduled prayer clock time, e.g. `15:30`.
+  - `Smart`: Show scheduled prayer time (`15:30`) until less than 1 hour remains, then automatically switch to countdown (`45m`).
+- **Bar widget separator**:
+  - Choose between presets (`· Dot`, `- Dash`, `| Pipe`, `: Colon`, `( ) Parens`, `Space`) or specify any custom separator string.
 - **Location**: `Auto` or `Manual`
 - **Manual city / country**: used only in Manual mode
 - **Calculation method**: `Auto` or one of the supported Aladhan methods

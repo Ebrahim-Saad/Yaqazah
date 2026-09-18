@@ -25,7 +25,8 @@
       "calculationMethod": "Auto",
       "asrSchool": "Shafi",
       "notificationsEnabled": true,
-      "barFormat": "Countdown"
+      "barFormat": "Countdown",
+      "barSeparator": "dot"
     },
     "schema": [
       {
@@ -34,7 +35,14 @@
         "label": "Bar widget look",
         "options": ["Countdown", "Time", "Smart"],
         "defaultValue": "Countdown",
-        "description": "Choose between countdown (in 1h 30m), scheduled time (15:30), or smart (time until less than 1 hour left, then countdown)."
+        "description": "Choose between countdown (1h 30m), scheduled time (15:30), or smart (time until less than 1 hour left, then countdown)."
+      },
+      {
+        "key": "barSeparator",
+        "type": "string",
+        "label": "Bar widget separator",
+        "defaultValue": "dot",
+        "description": "Separator between prayer name and timer in the bar (dot, dash, pipe, colon, parens, space, or custom)."
       },
       {
         "key": "locationMode",

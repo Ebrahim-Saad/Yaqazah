@@ -131,7 +131,7 @@ class YaqazahTests(unittest.TestCase):
         now = datetime(2026, 8, 23, 14, 24, tzinfo=ZoneInfo("Europe/London"))
         rows, next_prayer = yaqazah.build_schedule(timings, now)
         self.assertEqual(next_prayer["name"], "Asr")
-        self.assertEqual(next_prayer["countdown"], "in 2h 40m")
+        self.assertEqual(next_prayer["countdown"], "2h 40m")
         self.assertEqual(next_prayer["minutesLeft"], 160)
         self.assertEqual(next_prayer["secondsLeft"], 160 * 60)
         self.assertGreater(next_prayer["targetTimestamp"], 0)
@@ -154,7 +154,7 @@ class YaqazahTests(unittest.TestCase):
         now = datetime(2026, 8, 23, 16, 34, tzinfo=ZoneInfo("Europe/London"))
         rows, next_prayer = yaqazah.build_schedule(timings, now)
         self.assertEqual(next_prayer["name"], "Asr")
-        self.assertEqual(next_prayer["countdown"], "in 30m")
+        self.assertEqual(next_prayer["countdown"], "30m")
         self.assertEqual(next_prayer["minutesLeft"], 30)
         self.assertEqual(next_prayer["secondsLeft"], 30 * 60)
         self.assertLess(next_prayer["minutesLeft"], 60)
@@ -192,7 +192,8 @@ class YaqazahTests(unittest.TestCase):
         _, next_prayer = yaqazah.build_schedule(timings, now)
         self.assertEqual(next_prayer["time"], "04:20")
         self.assertEqual(next_prayer["dayLabel"], "Tomorrow")
-        self.assertTrue(next_prayer["countdown"].startswith("in "))
+        self.assertFalse(next_prayer["countdown"].startswith("in "))
+        self.assertTrue("h" in next_prayer["countdown"] or "m" in next_prayer["countdown"])
 
     def test_search_cities_formats_results(self):
         fake_payload = {

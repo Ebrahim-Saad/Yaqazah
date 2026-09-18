@@ -69,6 +69,9 @@ BarWidget {
     function setBarFormat(format: string): void {
       if (panelLoader.item) panelLoader.item.setBarFormat(format)
     }
+    function setBarSeparator(separator: string): void {
+      if (panelLoader.item) panelLoader.item.setBarSeparator(separator)
+    }
     function setMethod(methodId: string): void {
       if (panelLoader.item) panelLoader.item.setMethod(methodId)
     }

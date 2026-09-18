@@ -48,11 +48,59 @@ Panel {
   readonly property var nextPrayer: report && report.next ? report.next : null
   readonly property var prayers: report && report.prayers ? report.prayers : []
 
+  function cleanCountdown(cd) {
+    if (!cd) return ""
+    return String(cd).replace(/^in\s+/i, "").trim()
+  }
+
+  readonly property string rawCountdown: nextPrayer ? cleanCountdown(nextPrayer.countdown) : ""
+
   readonly property string currentBarFormatSetting: {
     var raw = root.settings && root.settings.barFormat !== undefined ? String(root.settings.barFormat).trim().toLowerCase() : "countdown"
     if (raw === "time" || raw === "clock") return "Time"
     if (raw === "smart" || raw === "hybrid" || raw === "auto") return "Smart"
     return "Countdown"
+  }
+
+  readonly property string currentSeparatorSetting: {
+    var raw = root.settings && root.settings.barSeparator !== undefined ? String(root.settings.barSeparator).trim() : "dot"
+    return raw !== "" ? raw : "dot"
+  }
+
+  readonly property bool isCustomSeparator: {
+    var s = currentSeparatorSetting.toLowerCase()
+    return s !== "dot" && s !== "dash" && s !== "pipe" && s !== "colon" && s !== "parens" && s !== "space"
+  }
+
+  function formatBarLabel(name, time) {
+    if (!name) return ""
+    if (!time) return name
+    var sep = root.currentSeparatorSetting
+    var lower = sep.toLowerCase()
+    if (lower === "parens" || lower === "parentheses" || sep === "()") {
+      return name + " (" + time + ")"
+    } else if (lower === "brackets" || sep === "[]") {
+      return name + " [" + time + "]"
+    } else if (lower === "dot") {
+      return name + " · " + time
+    } else if (lower === "dash") {
+      return name + " - " + time
+    } else if (lower === "pipe") {
+      return name + " | " + time
+    } else if (lower === "colon") {
+      return name + ": " + time
+    } else if (lower === "space") {
+      return name + " " + time
+    } else {
+      var literal = String(sep)
+      if (literal === "·" || literal === "-" || literal === "|" || literal === "/" || literal === "~" || literal === "•") {
+        return name + " " + literal + " " + time
+      } else if (literal === ":") {
+        return name + ": " + time
+      } else {
+        return name + (literal.indexOf(" ") !== -1 ? literal : (" " + literal + " ")) + time
+      }
+    }
   }
 
   readonly property bool isUnderOneHour: {
@@ -67,8 +115,8 @@ Panel {
     if (nextPrayer.minutesLeft !== undefined && nextPrayer.minutesLeft !== null) {
       return Number(nextPrayer.minutesLeft) < 60
     }
-    if (nextPrayer.countdown && typeof nextPrayer.countdown === "string") {
-      return nextPrayer.countdown.indexOf("h") === -1
+    if (rawCountdown) {
+      return rawCountdown.indexOf("h") === -1
     }
     return false
   }
@@ -78,21 +126,30 @@ Panel {
     if (currentBarFormatSetting === "Time") {
       return nextPrayer.time
     } else if (currentBarFormatSetting === "Smart") {
-      return isUnderOneHour ? nextPrayer.countdown : nextPrayer.time
+      return isUnderOneHour ? rawCountdown : nextPrayer.time
     } else {
-      return nextPrayer.countdown
+      return rawCountdown
     }
   }
 
   readonly property string barLabel: nextPrayer
-    ? nextPrayer.name + " · " + barTimeText
+    ? formatBarLabel(nextPrayer.name, barTimeText)
     : (loading ? "Prayer …" : "Prayer unavailable")
+
+  readonly property var separatorPresets: [
+    { id: "dot", label: "·", name: "Dot" },
+    { id: "dash", label: "-", name: "Dash" },
+    { id: "pipe", label: "|", name: "Pipe" },
+    { id: "colon", label: ":", name: "Colon" },
+    { id: "parens", label: "( )", name: "Parens" },
+    { id: "space", label: "␣", name: "Space" }
+  ]
 
   readonly property var barFormatOptions: [
     {
       id: "Countdown",
       title: "Countdown",
-      example: "(in 1h 30m)",
+      example: "(1h 30m)",
       description: "Always shows the remaining time countdown until the next prayer."
     },
     {
@@ -104,7 +161,7 @@ Panel {
     {
       id: "Smart",
       title: "Smart Auto-switch",
-      example: "(15:30 → in 45m)",
+      example: "(15:30 → 45m)",
       description: "Shows scheduled time until less than 1 hour remains, then switches to countdown."
     }
   ]
@@ -232,6 +289,10 @@ Panel {
 
   function setBarFormat(formatId) {
     persistSettings({ barFormat: formatId })
+  }
+
+  function setBarSeparator(sepId) {
+    persistSettings({ barSeparator: String(sepId || "").trim() || "dot" })
   }
 
   function startEditingLocation() {
@@ -493,7 +554,7 @@ Panel {
 
               Text {
                 width: parent.width
-                text: root.nextPrayer ? (root.nextPrayer.dayLabel + " · " + root.nextPrayer.countdown) : ""
+                text: root.nextPrayer ? (root.nextPrayer.dayLabel + " · " + root.rawCountdown) : ""
                 textFormat: Text.PlainText
                 color: root.dim
                 font.family: root.fontFamily
@@ -1426,6 +1487,144 @@ Panel {
                   cursorShape: Qt.PointingHandCursor
                   preventStealing: true
                   onClicked: root.setBarFormat(optCard.modelData.id)
+                }
+              }
+            }
+          }
+
+          PanelSeparator { foreground: root.foreground }
+
+          // ---- Bar Widget Separator Section -------------------------------
+          Column {
+            width: parent.width
+            spacing: Style.space(6)
+
+            PanelSectionHeader {
+              text: "BAR WIDGET SEPARATOR"
+              foreground: root.foreground
+            }
+
+            Text {
+              width: parent.width
+              text: "Choose or customize the separator between prayer name and timer."
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              wrapMode: Text.WordWrap
+            }
+
+            // Grid of Presets
+            Grid {
+              width: parent.width
+              columns: 3
+              spacing: Style.space(6)
+
+              Repeater {
+                model: root.separatorPresets
+
+                Rectangle {
+                  id: sepBtn
+                  required property var modelData
+                  required property int index
+                  width: Math.floor((parent.width - Style.space(12)) / 3)
+                  height: Style.space(32)
+                  radius: Style.cornerRadius
+
+                  readonly property bool isSelected: root.currentSeparatorSetting.toLowerCase() === modelData.id
+                  readonly property bool isHovered: sepMouse.containsMouse
+
+                  color: isSelected
+                    ? Style.selectedFillFor(root.foreground, root.accent)
+                    : (isHovered ? Style.hoverFillFor(root.foreground, root.accent) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.04))
+                  border.width: Style.spacing.hairline
+                  border.color: isSelected
+                    ? root.accent
+                    : (isHovered ? Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.5) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.12))
+
+                  Row {
+                    anchors.centerIn: parent
+                    spacing: Style.space(6)
+
+                    Text {
+                      anchors.verticalCenter: parent.verticalCenter
+                      text: sepBtn.modelData.label
+                      color: sepBtn.isSelected ? root.accent : root.foreground
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.bodySmall
+                      font.bold: true
+                    }
+
+                    Text {
+                      anchors.verticalCenter: parent.verticalCenter
+                      text: sepBtn.modelData.name
+                      color: sepBtn.isSelected ? root.accent : root.dim
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  MouseArea {
+                    id: sepMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    preventStealing: true
+                    onClicked: {
+                      root.setBarSeparator(sepBtn.modelData.id)
+                      if (customSepInput) customSepInput.text = ""
+                    }
+                  }
+                }
+              }
+            }
+
+            // Custom separator input row
+            Row {
+              width: parent.width
+              spacing: Style.space(6)
+
+              TextField {
+                id: customSepInput
+                width: parent.width - applySepBtn.width - Style.space(6)
+                foreground: root.foreground
+                accent: root.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.bodySmall
+                placeholderText: "Custom separator (e.g.  /  or  ~ )..."
+                text: root.isCustomSeparator ? root.currentSeparatorSetting : ""
+                onAccepted: {
+                  if (text.trim() !== "") root.setBarSeparator(text)
+                }
+              }
+
+              Rectangle {
+                id: applySepBtn
+                height: customSepInput.height
+                width: Style.space(56)
+                radius: Style.cornerRadius
+                readonly property bool hot: applySepMouse.containsMouse
+                color: hot ? Style.selectedFillFor(root.foreground, root.accent) : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.08)
+                border.width: Style.spacing.hairline
+                border.color: hot ? root.accent : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.15)
+
+                Text {
+                  anchors.centerIn: parent
+                  text: "Set"
+                  color: parent.hot ? root.accent : root.foreground
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.caption
+                  font.bold: true
+                }
+
+                MouseArea {
+                  id: applySepMouse
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  preventStealing: true
+                  onClicked: {
+                    if (customSepInput.text.trim() !== "") root.setBarSeparator(customSepInput.text)
+                  }
                 }
               }
             }
