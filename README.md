@@ -2,7 +2,7 @@
 
 > **Awaken from the digital trance.**
 
-Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It helps break the digital trance and heedlessness (*ghaflah*) that often comes with prolonged computer sessions by keeping your spiritual duties front and center. It provides next-prayer countdowns directly in your status bar, opens a calm daily timetable panel, sends theme-matched desktop notifications when prayer begins, and serves as a foundation for daily spiritual reminders and Athkar.
+Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It helps break the digital trance and heedlessness (*ghaflah*) that often comes with long computer sessions by keeping your worship the top priority. It provides next-prayer countdowns directly in your status bar, opens daily prayer times, sends theme-matched desktop notifications when prayer begins, and serves as a foundation for daily prayer reminders.
 
 ## Features
 
@@ -14,7 +14,7 @@ Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It
 - Remaining or elapsed time beside every schedule entry
 - Hijri date, location source, method, and school in the panel
 - Last-known location and prayer-time caching for transient network failures
-- Prayer notifications with an SVG icon recolored from the active Omarchy theme
+- Prayer notifications with an icon recolored from the active Omarchy theme
 - Keyboard-friendly native Omarchy popup behavior
 - No third-party Python packages
 
@@ -27,7 +27,7 @@ Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It
 
 ## Install
 
-The repository root is an Omarchy plugin, so it can be installed directly from its Git URL:
+It can be installed directly from its Git URL:
 
 ```bash
 omarchy plugin add https://github.com/Ebrahim-Saad/yaqazah.git --enable
@@ -39,18 +39,16 @@ The widget is added to the center section by default. Move it if needed:
 omarchy bar move esaad.yaqazah --section right
 ```
 
-Third-party plugins run inside `omarchy-shell`; review the source before enabling one.
-
 ## Configure
 
-Open **Setup > Plugins > Yaqazah** or open the in-popup **Settings** page:
+Open the in-popup **Settings** page:
 
 - **Bar widget look**:
   - `Countdown`: Always show remaining time countdown, e.g. `1h 30m`.
   - `Time`: Always show exact scheduled prayer clock time, e.g. `15:30`.
   - `Smart`: Show scheduled prayer time (`15:30`) until less than 1 hour remains, then automatically switch to countdown (`45m`).
 - **Bar widget separator**:
-  - Choose between presets (`· Dot`, `- Dash`, `| Pipe`, `: Colon`, `( ) Parens`, `Space`) or specify any custom separator string.
+  - Choose between presets (`· Dot`, `- Dash`, `| Pipe`, `: Colon`, `( ) Parens`, `Space`) or specify any custom separator.
 - **Time system**:
   - `24-hour`: Standard 24-hour clock display, e.g. `15:30`.
   - `12-hour`: 12-hour clock format with AM/PM, e.g. `3:30 PM`.
@@ -73,8 +71,6 @@ cache_home=${XDG_CACHE_HOME:-"$HOME/.cache"}
 rm -rf -- "$state_home/yaqazah" "$cache_home/yaqazah"
 ```
 
-This resolves the same XDG state and cache directories used by Yaqazah. Removing the plugin does not alter other Omarchy or Hyprland configuration.
-
 ## Use
 
 - Left click: open or close the daily prayer panel
@@ -86,8 +82,8 @@ This resolves the same XDG state and cache directories used by Yaqazah. Removing
   - Click the **Location** rail to toggle `Auto (IP)` or search for a city with live suggestions.
   - Click **Method** to open the calculation method picker and select from 23 supported methods.
   - Click **Shafi** or **Hanafi** to toggle the Asr juristic school in 1 click.
-  - Changes are saved immediately to Omarchy's settings and update the timetable and status bar in real time.
-- `R` while the panel is open: refresh
+  - Changes are saved immediately to Omarchy's settings and update the prayer times and status bar in real time.
+- `R` while the panel is open: refreshR
 - `Esc`: return from Settings, close active picker, or close the panel
 
 The plugin refreshes every 30 seconds. Location is refreshed every six hours; prayer schedules are cached per date, location, method, and Asr school.
