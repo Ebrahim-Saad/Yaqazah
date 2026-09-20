@@ -111,10 +111,45 @@ class YaqazahTests(unittest.TestCase):
     def test_country_method_recommendations(self):
         self.assertEqual(yaqazah.recommended_method("GB"), "Moonsighting")
         self.assertEqual(yaqazah.recommended_method("SA"), "Makkah")
+        self.assertEqual(yaqazah.recommended_method("EG"), "Egypt")
+        self.assertEqual(yaqazah.recommended_method("JO"), "Jordan")
         self.assertEqual(yaqazah.recommended_method("XX"), "MWL")
 
     def test_explicit_method_wins(self):
         self.assertEqual(yaqazah.select_method("ISNA", "GB"), ("ISNA", 2, False))
+        self.assertEqual(yaqazah.select_method("Egypt", "EG"), ("Egypt", 5, False))
+        self.assertEqual(yaqazah.select_method("MWL", "GB"), ("MWL", 3, False))
+        self.assertEqual(yaqazah.select_method("Karachi", "PK"), ("Karachi", 1, False))
+        self.assertEqual(yaqazah.select_method("Jordan", "JO"), ("Jordan", 23, False))
+
+    def test_official_aladhan_method_ids(self):
+        expected = {
+            "Jafari": 0,
+            "Karachi": 1,
+            "ISNA": 2,
+            "MWL": 3,
+            "Makkah": 4,
+            "Egypt": 5,
+            "Tehran": 7,
+            "Gulf": 8,
+            "Kuwait": 9,
+            "Qatar": 10,
+            "Singapore": 11,
+            "France": 12,
+            "Turkey": 13,
+            "Russia": 14,
+            "Moonsighting": 15,
+            "Dubai": 16,
+            "JAKIM": 17,
+            "Tunisia": 18,
+            "Algeria": 19,
+            "Kemenag": 20,
+            "Morocco": 21,
+            "Portugal": 22,
+            "Jordan": 23,
+        }
+        for name, method_id in expected.items():
+            self.assertEqual(yaqazah.METHODS.get(name), method_id, f"Method {name} ID mismatch")
 
     def test_schedule_marks_next_prayer(self):
         timings = {

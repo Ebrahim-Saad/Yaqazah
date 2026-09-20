@@ -42,11 +42,11 @@ JSON_MAX_STRING_LENGTH = 512
 
 METHODS = {
     "Jafari": 0,
-    "MWL": 1,
+    "Karachi": 1,
     "ISNA": 2,
-    "Egypt": 3,
+    "MWL": 3,
     "Makkah": 4,
-    "Karachi": 5,
+    "Egypt": 5,
     "Tehran": 7,
     "Gulf": 8,
     "Kuwait": 9,
@@ -63,6 +63,7 @@ METHODS = {
     "Kemenag": 20,
     "Morocco": 21,
     "Portugal": 22,
+    "Jordan": 23,
 }
 
 # A conservative country recommendation. Users can override it in plugin settings.
@@ -77,6 +78,7 @@ COUNTRY_METHODS = {
     "ID": "Kemenag",
     "IN": "Karachi",
     "IR": "Tehran",
+    "JO": "Jordan",
     "KW": "Kuwait",
     "MA": "Morocco",
     "MY": "JAKIM",

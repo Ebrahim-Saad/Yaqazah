@@ -238,6 +238,7 @@ Panel {
     { id: "Kemenag", name: "Indonesia (Kemenag)", desc: "Kementerian Agama Republik Indonesia" },
     { id: "Morocco", name: "Morocco", desc: "Ministry of Habous, Morocco" },
     { id: "Portugal", name: "Portugal", desc: "Comunidade Islâmica de Lisboa" },
+    { id: "Jordan", name: "Jordan", desc: "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan" },
     { id: "Jafari", name: "Shia Ithna-Ashari (Jafari)", desc: "Leva Research Institute, Qum" }
   ]
 
@@ -1071,7 +1072,7 @@ Panel {
                   accent: root.accent
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.bodySmall
-                  placeholderText: "Filter 23 methods (e.g. Makkah, MWL, Egypt, Karachi)..."
+                  placeholderText: "Filter 24 methods (e.g. Makkah, MWL, Egypt, Karachi)..."
                   onTextChanged: root.methodFilter = text
                   Keys.onPressed: function(event) {
                     if (event.key === Qt.Key_Escape) {

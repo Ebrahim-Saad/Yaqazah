@@ -79,7 +79,7 @@
         "key": "calculationMethod",
         "type": "enum",
         "label": "Calculation method",
-        "options": ["Auto", "MWL", "ISNA", "Egypt", "Makkah", "Karachi", "Tehran", "Gulf", "Kuwait", "Qatar", "Singapore", "France", "Turkey", "Russia", "Moonsighting", "Dubai", "JAKIM", "Tunisia", "Algeria", "Kemenag", "Morocco", "Portugal", "Jafari"],
+        "options": ["Auto", "MWL", "ISNA", "Egypt", "Makkah", "Karachi", "Tehran", "Gulf", "Kuwait", "Qatar", "Singapore", "France", "Turkey", "Russia", "Moonsighting", "Dubai", "JAKIM", "Tunisia", "Algeria", "Kemenag", "Morocco", "Portugal", "Jordan", "Jafari"],
         "defaultValue": "Auto",
         "description": "Auto selects a commonly used method for the detected country."
       },
