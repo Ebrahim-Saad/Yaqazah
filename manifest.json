@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "author": "Ebrahim Saad",
   "license": "MIT",
-  "description": "An Islamic companion for Omarchy that breaks the digital trance of long computer sessions with prayer countdowns, a daily timetable, athkar, and mindful spiritual reminders.",
+  "description": "An Islamic companion for Omarchy that breaks the digital trance of long computer sessions with prayer times and countdowns, and more upcoming features like athkar, athan, and mindful reminders.",
   "kinds": [
     "bar-widget"
   ],
