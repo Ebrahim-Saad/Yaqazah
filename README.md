@@ -68,23 +68,6 @@ cache_home=${XDG_CACHE_HOME:-"$HOME/.cache"}
 rm -rf -- "$state_home/yaqazah" "$cache_home/yaqazah"
 ```
 
-## Use
-
-- Left click: open or close the daily prayer panel
-- Middle click: refresh location and prayer data
-- In the popup:
-  - Click the **Settings icon** (`󰒓`) in the top left corner to switch to the Settings page.
-  - On the Settings page, customize the Bar Widget format (`Countdown`, `Time`, `Smart`) or toggle prayer notifications.
-  - Click the **Back button** (`󰅁`) in the top left corner to return to the prayer timetable.
-  - Click the **Location** rail to toggle `Auto (IP)` or search for a city with live suggestions.
-  - Click **Method** to open the calculation method picker and select from 23 supported methods.
-  - Click **Shafi** or **Hanafi** to toggle the Asr juristic school in 1 click.
-  - Changes are saved immediately to Omarchy's settings and update the prayer times and status bar in real time.
-- `R` while the panel is open: refreshR
-- `Esc`: return from Settings, close active picker, or close the panel
-
-The plugin refreshes every 30 seconds. Location is refreshed every six hours; prayer schedules are cached per date, location, method, and Asr school.
-
 ## Data Services
 
 - [Aladhan](https://aladhan.com/prayer-times-api) for prayer calculations and Hijri dates
