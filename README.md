@@ -2,12 +2,11 @@
 
 > **Awaken from the digital trance.**
 
-Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It helps break the digital trance and heedlessness (*ghaflah*) that often comes with long computer sessions by keeping your worship the top priority. It provides next-prayer countdowns directly in your status bar, opens daily prayer times, sends theme-matched desktop notifications when prayer begins, and serves as a foundation for daily prayer reminders.
+Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It helps break the digital trance and heedlessness that often comes with long computer sessions. It provides next-prayer countdowns directly in your status bar, opens daily prayer times, sends theme-matched desktop notifications when prayer begins, and serves as a foundation for daily prayer reminders.
 
 ## Features
 
-- Automatic city-level location detection from the public IP
-- Manual city and country override through Omarchy plugin settings
+- Automatic & Manual city-level location detection from the public IP
 - Country-based calculation method recommendation with explicit override
 - Shafi and Hanafi Asr calculation
 - Daily Fajr, Sunrise, Dhuhr, Asr, Maghrib, and Isha schedule
@@ -15,8 +14,6 @@ Yaqazah is an Islamic companion and prayer-time plugin for the Omarchy shell. It
 - Hijri date, location source, method, and school in the panel
 - Last-known location and prayer-time caching for transient network failures
 - Prayer notifications with an icon recolored from the active Omarchy theme
-- Keyboard-friendly native Omarchy popup behavior
-- No third-party Python packages
 
 ## Requirements
 
@@ -33,7 +30,7 @@ It can be installed directly from its Git URL:
 omarchy plugin add https://github.com/Ebrahim-Saad/yaqazah.git --enable
 ```
 
-The widget is added to the center section by default. Move it if needed:
+Move it if needed:
 
 ```bash
 omarchy bar move esaad.yaqazah --section right
