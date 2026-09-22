@@ -465,6 +465,20 @@ Panel {
     }
   }
 
+  Timer {
+    id: dataKillTimer
+    interval: 35000
+    running: dataProc.running
+    onTriggered: {
+      if (dataProc.running) {
+        dataProc.running = false
+        root.loading = false
+        if (root.report === null)
+          root.errorText = "Prayer data request timed out."
+      }
+    }
+  }
+
   Process {
     id: geocodeProc
     onExited: function(exitCode) {
@@ -489,6 +503,18 @@ Panel {
         } catch (e) {
           root.locationSuggestions = []
         }
+      }
+    }
+  }
+
+  Timer {
+    id: geocodeKillTimer
+    interval: 35000
+    running: geocodeProc.running
+    onTriggered: {
+      if (geocodeProc.running) {
+        geocodeProc.running = false
+        root.geocoding = false
       }
     }
   }

@@ -12,6 +12,7 @@ import secrets
 import stat
 import subprocess
 import sys
+from time import monotonic as _monotonic
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -31,6 +32,7 @@ THEMED_ICON = CACHE_DIR / "yaqazah.svg"
 THEME_PATH = Path.home() / ".local/state/omarchy/current/theme/colors.toml"
 
 HTTP_MAX_BYTES = 256 * 1024
+HTTP_WALL_TIMEOUT = 30
 CACHE_MAX_BYTES = 128 * 1024
 THEME_MAX_BYTES = 64 * 1024
 SVG_MAX_BYTES = 64 * 1024
@@ -116,10 +118,12 @@ def ensure_dirs() -> None:
         os.close(directory_fd)
 
 
-def read_limited(stream: Any, max_bytes: int) -> bytes:
+def read_limited(stream: Any, max_bytes: int, deadline: float = 0) -> bytes:
     chunks: list[bytes] = []
     total = 0
     while True:
+        if deadline and _monotonic() > deadline:
+            raise YaqazahError("The network request took too long.")
         chunk = stream.read(min(READ_CHUNK_BYTES, max_bytes - total + 1))
         if not chunk:
             return b"".join(chunks)
@@ -234,17 +238,32 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
     atomic_write_text(path, rendered, CACHE_MAX_BYTES)
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Block all HTTP redirects to prevent SSRF via open-redirect chains."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise YaqazahError("The remote service attempted an unexpected redirect.")
+
+
 def request_json(url: str, timeout: float = 8) -> dict[str, Any]:
+    if not url.startswith("https://"):
+        raise YaqazahError("Only HTTPS URLs are allowed.")
+    deadline = _monotonic() + HTTP_WALL_TIMEOUT
     request = urllib.request.Request(
         url,
         headers={"Accept": "application/json", "User-Agent": "Yaqazah/1.0"},
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        opener = urllib.request.build_opener(_NoRedirectHandler)
+        with opener.open(request, timeout=timeout) as response:
             content_length = response.headers.get("Content-Length")
-            if content_length is not None and int(content_length) > HTTP_MAX_BYTES:
-                raise YaqazahError("The remote service returned too much data.")
-            payload = json.loads(read_limited(response, HTTP_MAX_BYTES).decode("utf-8"))
+            if content_length is not None:
+                try:
+                    if int(content_length) > HTTP_MAX_BYTES:
+                        raise YaqazahError("The remote service returned too much data.")
+                except ValueError:
+                    pass
+            payload = json.loads(read_limited(response, HTTP_MAX_BYTES, deadline).decode("utf-8"))
             validate_json_shape(payload)
     except YaqazahError:
         raise
